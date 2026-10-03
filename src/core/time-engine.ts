@@ -1,8 +1,34 @@
-import type { CategoryMetric, InvestmentRecord, TimeAccount, TimeCategory } from './models';
-import { CATEGORIES, CATEGORY_META } from './models';
+import type { CategoryMetric, CategoryQualityMetric, InvestmentQuality, InvestmentRecord, QualityMetric, TimeAccount, TimeCategory } from './models';
+import { CATEGORIES, CATEGORY_META, DEFAULT_QUALITY, QUALITIES, QUALITY_META } from './models';
 
 export function totalInvested(records: InvestmentRecord[]): number {
   return records.reduce((sum, item) => sum + item.hours, 0);
+}
+
+export function qualityOf(item: InvestmentRecord): InvestmentQuality {
+  return item.quality ?? DEFAULT_QUALITY;
+}
+
+export function qualityMetrics(records: InvestmentRecord[]): QualityMetric[] {
+  const total = totalInvested(records);
+  return QUALITIES.map((quality) => {
+    const hours = records.filter((item) => qualityOf(item) === quality).reduce((sum, item) => sum + item.hours, 0);
+    const meta = QUALITY_META[quality];
+    return { quality, hours, share: total ? hours / total : 0, color: meta.color, label: meta.label };
+  });
+}
+
+export function categoryQuality(records: InvestmentRecord[]): CategoryQualityMetric[] {
+  return CATEGORIES.map((category) => {
+    const items = records.filter((item) => item.category === category);
+    const hours = items.reduce((sum, item) => sum + item.hours, 0);
+    const segments = QUALITIES.map((quality) => {
+      const qualityHours = items.filter((item) => qualityOf(item) === quality).reduce((sum, item) => sum + item.hours, 0);
+      return { quality, hours: qualityHours, share: hours ? qualityHours / hours : 0, color: QUALITY_META[quality].color };
+    });
+    const meta = CATEGORY_META[category];
+    return { category, hours, color: meta.color, icon: meta.icon, segments };
+  }).filter((item) => item.hours > 0);
 }
 
 export function metricsFor(records: InvestmentRecord[]): CategoryMetric[] {
@@ -38,15 +64,15 @@ export function suggestions(metrics: CategoryMetric[], account: TimeAccount): st
   return result;
 }
 
-export function record(category: TimeCategory, hours: number, note: string, date = new Date().toISOString()): InvestmentRecord {
-  return { id: `time-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`, category, hours: Math.max(0.5, Number(hours) || 0.5), note: note.trim() || '未命名投资', date };
+export function record(category: TimeCategory, hours: number, note: string, date = new Date().toISOString(), quality: InvestmentQuality = DEFAULT_QUALITY): InvestmentRecord {
+  return { id: `time-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`, category, hours: Math.max(0.5, Number(hours) || 0.5), note: note.trim() || '未命名投资', date, quality };
 }
 
 export function sampleSnapshot() {
   const account: TimeAccount = { dailyHours: 8, weeklyHours: 56, updatedAt: new Date().toISOString() };
-  const seed: Array<[TimeCategory, number, string]> = [
-    ['事业', 16, '产品策略与交付'], ['学习', 10, '阅读与课程'], ['健康', 7, '力量训练与散步'],
-    ['关系', 8, '家人和朋友'], ['休息', 9, '睡眠与留白'], ['娱乐', 4, '电影与游戏'],
+  const seed: Array<[TimeCategory, number, string, InvestmentQuality]> = [
+    ['事业', 16, '产品策略与交付', '高投入'], ['学习', 10, '阅读与课程', '高投入'], ['健康', 7, '力量训练与散步', '维持'],
+    ['关系', 8, '家人和朋友', '维持'], ['休息', 9, '睡眠与留白', '低效'], ['娱乐', 4, '电影与游戏', '低效'],
   ];
-  return { account, records: seed.map(([category, hours, note], index) => record(category, hours, note, new Date(Date.now() - index * 86400000).toISOString())) };
+  return { account, records: seed.map(([category, hours, note, quality], index) => record(category, hours, note, new Date(Date.now() - index * 86400000).toISOString(), quality)) };
 }

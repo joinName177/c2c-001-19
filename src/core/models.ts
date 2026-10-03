@@ -1,5 +1,7 @@
 export type TimeCategory = '健康' | '学习' | '关系' | '事业' | '娱乐' | '休息';
 
+export type InvestmentQuality = '高投入' | '维持' | '低效';
+
 export interface TimeAccount {
   dailyHours: number;
   weeklyHours: number;
@@ -12,6 +14,7 @@ export interface InvestmentRecord {
   hours: number;
   note: string;
   date: string;
+  quality?: InvestmentQuality;
 }
 
 export interface TimeSnapshot {
@@ -28,7 +31,40 @@ export interface CategoryMetric {
   icon: string;
 }
 
+export interface QualityMetric {
+  quality: InvestmentQuality;
+  hours: number;
+  share: number;
+  color: string;
+  label: string;
+}
+
+export interface QualitySegment {
+  quality: InvestmentQuality;
+  hours: number;
+  share: number;
+  color: string;
+}
+
+export interface CategoryQualityMetric {
+  category: TimeCategory;
+  hours: number;
+  color: string;
+  icon: string;
+  segments: QualitySegment[];
+}
+
 export const CATEGORIES: TimeCategory[] = ['健康', '学习', '关系', '事业', '娱乐', '休息'];
+
+export const QUALITIES: InvestmentQuality[] = ['高投入', '维持', '低效'];
+
+export const DEFAULT_QUALITY: InvestmentQuality = '维持';
+
+export const QUALITY_META: Record<InvestmentQuality, { color: string; icon: string; label: string }> = {
+  高投入: { color: '#c7dc70', icon: '▲', label: '专注的高价值产出' },
+  维持: { color: '#e6b65c', icon: '◆', label: '必要的日常维持' },
+  低效: { color: '#e88c5e', icon: '▽', label: '被消耗的低效时间' },
+};
 
 export const CATEGORY_META: Record<TimeCategory, { color: string; icon: string; roi: number; label: string }> = {
   健康: { color: '#f07f68', icon: '✦', roi: 1.65, label: '身体是第一账户' },
