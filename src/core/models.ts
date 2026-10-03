@@ -1,5 +1,7 @@
 export type TimeCategory = '健康' | '学习' | '关系' | '事业' | '娱乐' | '休息';
 
+export type InvestmentTag = '高投入' | '维持' | '低效';
+
 export interface TimeAccount {
   dailyHours: number;
   weeklyHours: number;
@@ -12,6 +14,9 @@ export interface InvestmentRecord {
   hours: number;
   note: string;
   date: string;
+  tag: InvestmentTag;
+  /** 旧记录迁移而来：标签先取默认值，等待用户首次补标 */
+  tagPending?: boolean;
 }
 
 export interface TimeSnapshot {
@@ -37,4 +42,15 @@ export const CATEGORY_META: Record<TimeCategory, { color: string; icon: string; 
   事业: { color: '#e6b65c', icon: '◒', roi: 2.5, label: '创造与交付' },
   娱乐: { color: '#68c4aa', icon: '◇', roi: 1.2, label: '恢复与好奇' },
   休息: { color: '#9b91df', icon: '☾', roi: 1.8, label: '恢复系统' },
+};
+
+/** 旧记录缺少标签时的默认归类：中性的「维持」，保证时间不漏算 */
+export const DEFAULT_TAG: InvestmentTag = '维持';
+
+export const TAGS: InvestmentTag[] = ['高投入', '维持', '低效'];
+
+export const TAG_META: Record<InvestmentTag, { color: string; icon: string; hint: string }> = {
+  高投入: { color: '#c7dc70', icon: '↑', hint: '真正有效、值得加码' },
+  维持: { color: '#7fa7e0', icon: '→', hint: '保持节奏的必要投入' },
+  低效: { color: '#e88c5e', icon: '↓', hint: '只是耗时间，需要优化' },
 };
